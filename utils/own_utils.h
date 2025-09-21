@@ -1,7 +1,7 @@
 #ifndef OWN_UTILS_H
 #define OWN_UTILS_H
 
-#include <QKeyEvent>
+#include <chrono>
 #include <string_view>
 
 

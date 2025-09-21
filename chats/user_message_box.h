@@ -1,15 +1,11 @@
 #ifndef USER_MESSAGE_BOX_H
 #define USER_MESSAGE_BOX_H
 
-#include "../utils/own_utils.h"
-
 #include <QTextEdit>
 #include <QKeyEvent>
 
-#include <iostream>
 
-class UserMessageBox : public QTextEdit
-{
+class UserMessageBox : public QTextEdit {
     Q_OBJECT
 public:
     UserMessageBox(QWidget* parent = nullptr);

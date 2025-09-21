@@ -2,8 +2,8 @@
 #define SIDEBAR_H
 
 #include <QWidget>
-#include <QVBoxLayout>
 #include <QPushButton>
+
 
 class Sidebar : public QWidget {
     Q_OBJECT

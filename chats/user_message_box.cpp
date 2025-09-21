@@ -1,5 +1,8 @@
 #include "user_message_box.h"
 
+#include "../utils/own_utils.h"
+
+
 UserMessageBox::UserMessageBox(QWidget* parent) : QTextEdit(parent) {
     setStyleSheet("border-radius: 10px; font-size: 12pt; background: #2c2c2c; color: cyan");
 }

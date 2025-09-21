@@ -1,5 +1,8 @@
 #include "sidebar.h"
 
+#include <QVBoxLayout>
+
+
 Sidebar::Sidebar(QWidget* parent) : QWidget(parent) {
     setFixedWidth(200);
     setStyleSheet("background-color: green; border-radius: 30px; ");

@@ -3,21 +3,14 @@
 
 #include "user_message_box.h"
 
-#include <QTextEdit>
 #include <QWidget>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPaintEvent>
-#include <QSpacerItem>
 #include <QScrollArea>
-#include <QScrollBar>
-#include <QLabel>
-#include <QList>
 
-#include <iostream>
 
-class ChatsCommon : public QWidget
-{
+class ChatsCommon : public QWidget {
     Q_OBJECT
 public:
     ChatsCommon(QWidget* parent = nullptr);

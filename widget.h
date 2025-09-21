@@ -3,16 +3,14 @@
 
 #include "chats/chats_common.h"
 #include "sidebar/sidebar.h"
+#include "utils/logger.h"
 
 #include <QWidget>
 #include <QGridLayout>
-#include <QHBoxLayout>
-#include <QStackedWidget>
-#include <QMouseEvent>
 #include <QTimer>
-#include <QSpacerItem>
 #include <QPaintEvent>
 #include <QPropertyAnimation>
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -29,9 +27,9 @@ public:
 
 private:
     Ui::Widget* ui;
+    std::shared_ptr<Logger> m_log;
 
     QGridLayout* m_main_layout;
-    // QStackedWidget* pages_widget;
 
     QPropertyAnimation* m_sidebar_animation;
     Sidebar* m_sidebar;
@@ -54,6 +52,6 @@ private slots:
     void showSidebar();
     void hideSidebar();
 
-    void onMessageReceived(const QByteArray &data);
+    // void onMessageReceived(const QByteArray &data);
 };
 #endif  // WIDGET_H

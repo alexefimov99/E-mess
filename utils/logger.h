@@ -2,10 +2,11 @@
 #define LOGGER_H
 
 #include "own_utils.h"
+
 #include <string>
 #include <string_view>
 #include <filesystem>
-#include <utility>
+
 
 class Logger
 {
@@ -19,8 +20,6 @@ public:
 public:
     Logger(const Logger&) = delete;
     void operator=(const Logger&) = delete;
-
-    // static Level strToLevel(const std::string level);
 
     template<typename... Args>
     void info(Args&&... args) {

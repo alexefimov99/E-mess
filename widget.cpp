@@ -3,12 +3,15 @@
 
 #include "utils/own_utils.h"
 
+#include <QMouseEvent>
+
 
 static std::atomic_bool s_should_kill_network_thread = false;
 
 Widget::Widget(QWidget *parent)
                : QWidget(parent)
-               , ui(new Ui::Widget) {
+               , ui(new Ui::Widget)
+               , m_log(Logger::getInstance()) {
     ui->setupUi(this);
     setWindowTitle("E-mess");
 
@@ -25,9 +28,9 @@ Widget::~Widget() {
     delete ui;
 }
 
-void Widget::onMessageReceived(const QByteArray &data) {
-    std::cout << "Received data: " << QString(data).toUtf8().constData() << std::endl;
-}
+// void Widget::onMessageReceived(const QByteArray &data) {
+//     m_log->info("Received data: ", QString(data).toUtf8().constData());
+// }
 
 bool Widget::eventFilter(QObject* watched, QEvent* event) {
     if (event->type() == QEvent::MouseMove) {

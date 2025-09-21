@@ -1,5 +1,13 @@
 #include "chats_common.h"
 
+#include <QLabel>
+#include <QList>
+#include <QScrollBar>
+#include <QSpacerItem>
+
+#include <iostream>
+
+
 ChatsCommon::ChatsCommon(QWidget* parent) : QWidget(parent), m_old_parent_width(parentWidget()->width()) {
     m_layout = new QVBoxLayout(this);
 
