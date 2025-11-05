@@ -27,7 +27,7 @@ std::filesystem::path Logger::getCurrPath() {
     } catch(const std::filesystem::filesystem_error& err) {
         std::cerr << "Can't take path to application. Check rights" << std::endl;
         curr_path = std::filesystem::path("/home") / log_dir; // TODO: Update also for win
-}
+    }
 
     return curr_path;
 }
@@ -97,8 +97,9 @@ std::pair<std::filesystem::path, std::uintmax_t> Logger::GetLatestFileInfo() {
 void Logger::writeInFile(const std::stringstream& log_message) {
     static constexpr std::uint32_t five_mbytes = 5 /** 1024*/ * 1024;
     const auto [latest_file, file_size] = GetLatestFileInfo();
-    if (getFilename().empty() || file_size > five_mbytes) {
-        const std::string actual_name = !latest_file.empty() || file_size > five_mbytes ? generateFileName() : latest_file.filename().string();
+    const bool file_size_exceeded = file_size > five_mbytes;
+    if (getFilename().empty() || file_size_exceeded) {
+        const std::string actual_name = latest_file.empty() || file_size_exceeded ? generateFileName() : latest_file.filename().string();
         getFilename(actual_name);
     }
 
