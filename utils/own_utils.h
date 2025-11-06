@@ -4,10 +4,15 @@
 #include <chrono>
 #include <string_view>
 
+#include <QWidget>
+
 
 namespace Utils {
     void closeWindow();
     void exitFromApp();
+
+    void showSidebars(QWidget* main_widget);
+    void hideSidebars(QWidget* main_widget);
 } // namespace Utils
 
 namespace TimeUtils {
