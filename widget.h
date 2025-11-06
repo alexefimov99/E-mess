@@ -31,14 +31,16 @@ private:
 
     QGridLayout* m_main_layout;
 
-    QPropertyAnimation* m_sidebar_animation;
-    Sidebar* m_sidebar;
-    QTimer* m_auto_hide_timer;
+    // QPropertyAnimation* m_sidebar_animation;
+    Sidebar* m_contact_list_sidebar;
+    Sidebar* m_contact_settings_sidebar;
+    Sidebar* m_user_settings_sidebar;
+    // QTimer* m_auto_hide_timer;
 
     ChatsCommon* m_common_elements;
 
 protected:
-    bool eventFilter(QObject* watched, QEvent* event) override;
+    // bool eventFilter(QObject* watched, QEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
 
 private:
@@ -49,9 +51,6 @@ private:
     void keyPressEvent(QKeyEvent* key_event) override;
 
 private slots:
-    void showSidebar();
-    void hideSidebar();
-
     // void onMessageReceived(const QByteArray &data);
 };
 #endif  // WIDGET_H
