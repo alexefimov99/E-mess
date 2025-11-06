@@ -1,7 +1,15 @@
 #include "own_utils.h"
 
 #include <ctime>
+#include <QApplication>
 
+#include "../sidebar/sidebar.h"
+
+
+QList<Sidebar*> findAllSidebars(const QWidget* widget) {
+    QList<Sidebar*> sidebars = widget->findChildren<Sidebar*>();
+    return sidebars;
+}
 
 namespace Utils {
     void closeWindow() {
@@ -12,6 +20,28 @@ namespace Utils {
     void exitFromApp() {
         // TODO: Quit from the application
         exit(0);
+    }
+
+    void showSidebars(QWidget* main_widget) {
+        static QList<Sidebar*> sidebars;
+        if (sidebars.empty()) {
+            sidebars = findAllSidebars(main_widget);
+        }
+
+        for (Sidebar* sidebar : sidebars) {
+            sidebar->show();
+        }
+    }
+
+    void hideSidebars(QWidget* main_widget) {
+        static QList<Sidebar*> sidebars;
+        if (sidebars.empty()) {
+            sidebars = findAllSidebars(main_widget);
+        }
+
+        for (Sidebar* sidebar : sidebars) {
+            sidebar->hide();
+        }
     }
 } // namespace Utils
 
