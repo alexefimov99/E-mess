@@ -68,13 +68,13 @@ private:
 private:
     Logger(const Level level);
 
-    bool fileExist();
-    std::filesystem::path getCurrPath();
-    std::filesystem::path getLogPath();
+    [[nodiscard]] bool fileExist();
+    [[nodiscard]] std::filesystem::path getCurrPath();
+    [[nodiscard]] std::filesystem::path getLogPath();
     std::string getFilename(const std::string& new_name = "");
     // TODO: update this method for multiply thread
-    std::string generateFileName();
-    std::pair<std::filesystem::path, std::uintmax_t> GetLatestFileInfo();
+    [[nodiscard]] std::string generateFileName();
+    [[nodiscard]] std::pair<std::filesystem::path, std::uintmax_t> GetLatestFileInfo();
 
     void writeMessage(const std::stringstream& log_message);
     void writeInFile(const std::stringstream& log_message);
