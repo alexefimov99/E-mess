@@ -95,11 +95,12 @@ std::pair<std::filesystem::path, std::uintmax_t> Logger::GetLatestFileInfo() {
 }
 
 void Logger::writeInFile(const std::stringstream& log_message) {
-    static constexpr std::uint32_t five_mbytes = 5 /** 1024*/ * 1024;
+    static constexpr std::uint32_t FIVE_MBYTES = 5 /** 1024*/ * 1024;
     const auto [latest_file, file_size] = GetLatestFileInfo();
-    const bool file_size_exceeded = file_size > five_mbytes;
+    const bool file_size_exceeded = file_size > FIVE_MBYTES;
     if (getFilename().empty() || file_size_exceeded) {
         const std::string actual_name = latest_file.empty() || file_size_exceeded ? generateFileName() : latest_file.filename().string();
+        // TODO: maybe I should make a set function
         getFilename(actual_name);
     }
 
