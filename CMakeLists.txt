@@ -51,6 +51,7 @@ else()
             sidebar/sidebar.h           sidebar/sidebar.cpp
             chats/chats_common.h        chats/chats_common.cpp
             chats/user_message_box.h    chats/user_message_box.cpp
+            settings/settings.h         settings/settings.cpp
             utils/own_utils.h           utils/own_utils.cpp
             utils/logger.h              utils/logger.cpp
         )
