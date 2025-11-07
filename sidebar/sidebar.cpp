@@ -3,11 +3,8 @@
 #include <QVBoxLayout>
 #include <QMouseEvent>
 
-#include <iostream>
-
 Sidebar::Sidebar(QWidget* parent, const SidebarType sidebar_type) : QWidget(parent)
-    , m_sidebar_type(sidebar_type)
-    , m_log(Logger::getInstance()) {
+    , m_sidebar_type(sidebar_type) {
     setFixedSize(m_SIZE, m_SIZE);
 
     initSidebar();

@@ -24,7 +24,7 @@ protected:
     void mousePressEvent(QMouseEvent* event) override;
 
 private:
-    Logger* m_log;
+    Logger* m_log = Logger::getInstance();
 
     QPushButton* m_self_dialog;
     const int m_SIZE = 60;

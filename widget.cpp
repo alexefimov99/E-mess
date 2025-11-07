@@ -13,6 +13,7 @@ Widget::Widget(QWidget *parent)
                , ui(new Ui::Widget)
                , m_log(Logger::getInstance()) {
     ui->setupUi(this);
+    m_log->info("Launch app");
     setWindowTitle("E-mess");
 
     m_main_layout = new QGridLayout(this);
