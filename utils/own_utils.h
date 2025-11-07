@@ -11,8 +11,8 @@ namespace Utils {
     void closeWindow();
     void exitFromApp();
 
-    void showSidebars(QWidget* main_widget);
-    void hideSidebars(QWidget* main_widget);
+    void showSidebars(const QWidget* main_widget);
+    void hideSidebars(const QWidget* main_widget);
 } // namespace Utils
 
 namespace TimeUtils {

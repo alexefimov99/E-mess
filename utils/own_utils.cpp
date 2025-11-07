@@ -26,7 +26,7 @@ namespace Utils {
         exit(0);
     }
 
-    void showSidebars(QWidget* main_widget) {
+    void showSidebars(const QWidget* main_widget) {
         static QList<Sidebar*> sidebars;
         if (sidebars.empty()) {
             sidebars = findAllSidebars(main_widget);
@@ -37,7 +37,7 @@ namespace Utils {
         }
     }
 
-    void hideSidebars(QWidget* main_widget) {
+    void hideSidebars(const QWidget* main_widget) {
         static QList<Sidebar*> sidebars;
         if (sidebars.empty()) {
             sidebars = findAllSidebars(main_widget);
