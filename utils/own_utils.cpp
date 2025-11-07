@@ -4,7 +4,10 @@
 #include <QApplication>
 
 #include "../sidebar/sidebar.h"
+#include "../utils/logger.h"
 
+
+static Logger* log = Logger::getInstance();
 
 QList<Sidebar*> findAllSidebars(const QWidget* widget) {
     QList<Sidebar*> sidebars = widget->findChildren<Sidebar*>();
@@ -18,6 +21,7 @@ namespace Utils {
     }
 
     void exitFromApp() {
+        log->info("Exit from app");
         // TODO: Quit from the application
         exit(0);
     }
