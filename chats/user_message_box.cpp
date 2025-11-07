@@ -2,8 +2,12 @@
 
 #include "../utils/own_utils.h"
 
+#include "../sidebar/sidebar.h"
 
-UserMessageBox::UserMessageBox(QWidget* parent) : QTextEdit(parent) {
+
+UserMessageBox::UserMessageBox(QWidget* parent)
+    : QTextEdit(parent)
+    , m_root_widget(parent->parentWidget()) {
     setStyleSheet("border-radius: 10px; font-size: 12pt; background: #2c2c2c; color: cyan");
 }
 
@@ -57,6 +61,16 @@ void UserMessageBox::keyPressEvent(QKeyEvent* key_event) {
             paste();
             return;
         }
+    }
+
+    if (key_event->modifiers() == Qt::AltModifier && m_root_widget) {
+        const bool sidebars_visible = m_root_widget->findChildren<Sidebar*>().takeFirst()->isVisible();
+        if (sidebars_visible) {
+            Utils::hideSidebars(m_root_widget);
+        } else {
+            Utils::showSidebars(m_root_widget);
+        }
+        return;
     }
 
     if (symbol_code == Qt::Key_Return && !toPlainText().isEmpty()) {
