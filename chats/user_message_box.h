@@ -16,6 +16,9 @@ private:
 
     void lineBreaker(size_t pos, QString& text);
 
+private:
+    const QWidget* const m_root_widget;
+
 signals:
     void sendMessage(const QString& message);
 };
