@@ -20,21 +20,8 @@ Logger* const Logger::getInstance(const Level level) {
     return m_logger_instance;
 }
 
-std::filesystem::path Logger::getCurrPath() {
-    static std::filesystem::path curr_path;
-    try {
-        curr_path = std::filesystem::current_path();
-    } catch(const std::filesystem::filesystem_error& err) {
-        std::cerr << "Can't take path to application. Check rights" << std::endl;
-        curr_path = std::filesystem::path("/home") / log_dir; // TODO: Update also for win
-    }
-
-    return curr_path;
-}
-
 std::filesystem::path Logger::getLogPath() {
-    static std::filesystem::path log_path = getCurrPath() / log_dir;
-    return log_path;
+    return Utils::getPath(log_dir);
 }
 
 std::string Logger::getFilename(const std::string& new_name) {
@@ -115,7 +102,7 @@ void Logger::writeInFile(const std::stringstream& log_message) {
 void Logger::writeMessage(const std::stringstream& log_message) {
     std::cout << log_message.str() << std::endl;
 
-    if (!std::filesystem::directory_entry(getCurrPath() / log_dir).is_directory()) {
+    if (!std::filesystem::directory_entry(getLogPath()).is_directory()) {
         std::filesystem::create_directory(getLogPath());
     }
     writeInFile(log_message);
