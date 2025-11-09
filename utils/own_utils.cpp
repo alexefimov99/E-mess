@@ -47,6 +47,18 @@ namespace Utils {
             sidebar->hide();
         }
     }
+
+    std::filesystem::path getPath(const std::string_view& dir) {
+        std::filesystem::path curr_path;
+        try {
+            curr_path = std::filesystem::current_path() / dir;
+        } catch(const std::filesystem::filesystem_error& err) {
+            log->warning("Can't take path to application. Check rights");
+            curr_path = std::filesystem::path("/home") / dir; // TODO: Update also for win
+        }
+
+        return curr_path;
+    }
 } // namespace Utils
 
 namespace TimeUtils {
