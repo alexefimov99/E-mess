@@ -27,7 +27,7 @@ public:
 
 private:
     Ui::Widget* ui;
-    std::unique_ptr<Logger> m_log;
+    std::shared_ptr<Logger> m_log;
 
     QGridLayout* m_main_layout;
 

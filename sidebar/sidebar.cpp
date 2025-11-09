@@ -3,7 +3,9 @@
 #include <QVBoxLayout>
 #include <QMouseEvent>
 
-Sidebar::Sidebar(QWidget* parent, const SidebarType sidebar_type) : QWidget(parent)
+Sidebar::Sidebar(QWidget* parent, const SidebarType sidebar_type)
+    : QWidget(parent)
+    , m_log(Logger::getInstance())
     , m_sidebar_type(sidebar_type) {
     setFixedSize(m_SIZE, m_SIZE);
 
