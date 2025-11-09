@@ -85,7 +85,6 @@ void Widget::loadData() {
 
 void Widget::keyPressEvent(QKeyEvent* key_event) {
     int symbol_code = key_event->key();
-
     if (key_event->modifiers() == Qt::ControlModifier) {
         if (symbol_code == Qt::Key_Q) {
             Utils::exitFromApp();
