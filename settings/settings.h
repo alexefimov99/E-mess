@@ -12,7 +12,7 @@ class Settings : public QWidget {
     Q_OBJECT
 public:
     Settings();
-    ~Settings();
+    virtual ~Settings();
 
     void setVolume() { }
 

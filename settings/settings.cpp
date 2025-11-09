@@ -106,7 +106,7 @@ void UserSettings::checkFields() {
     QJsonParseError err;
     QJsonDocument doc = QJsonDocument::fromJson(json_value.toUtf8(), &err);
     if (err.error != QJsonParseError::ParseError::NoError) {
-        m_log->warning("Settings: JSON parse error. ", err.errorString());
+        m_log->warning("Settings: JSON parse error. ", err.errorString().toUtf8().constData());
         return;
     }
 
