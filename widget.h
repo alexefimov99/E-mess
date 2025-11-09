@@ -11,6 +11,8 @@
 #include <QPaintEvent>
 #include <QPropertyAnimation>
 
+class Settings;
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -24,6 +26,10 @@ class Widget : public QWidget {
 public:
     explicit Widget(QWidget *parent = nullptr);
     ~Widget();
+
+protected:
+    // bool eventFilter(QObject* watched, QEvent* event) override;
+    void paintEvent(QPaintEvent* event) override;
 
 private:
     Ui::Widget* ui;
@@ -39,14 +45,14 @@ private:
 
     ChatsCommon* m_common_elements;
 
-protected:
-    // bool eventFilter(QObject* watched, QEvent* event) override;
-    void paintEvent(QPaintEvent* event) override;
+    Settings* contact_settings;
+    Settings* user_settings;
 
 private:
-    void createSidebar();
     void createGeneralWidget();
-    void updateConnectionStatus();
+    void initSidebars();
+    void loadData();
+    // void updateConnectionStatus();
 
     void keyPressEvent(QKeyEvent* key_event) override;
 

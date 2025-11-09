@@ -1,6 +1,7 @@
 #include "widget.h"
 #include "./ui_widget.h"
 
+#include "settings/settings.h"
 #include "utils/own_utils.h"
 
 #include <QMouseEvent>
@@ -19,7 +20,8 @@ Widget::Widget(QWidget *parent)
     m_main_layout = new QGridLayout(this);
 
     createGeneralWidget();
-    createSidebar();
+    initSidebars();
+    loadData();
 
     m_main_layout->addWidget(m_common_elements);
     setLayout(m_main_layout);
@@ -51,7 +53,7 @@ void Widget::createGeneralWidget() {
     m_common_elements = new ChatsCommon(this);
 }
 
-void Widget::createSidebar() {
+void Widget::initSidebars() {
     // m_auto_hide_timer = new QTimer(this);
     // m_auto_hide_timer->setSingleShot(true);
     // connect(m_auto_hide_timer, &QTimer::timeout, this, &Widget::hideSidebar);
@@ -71,6 +73,14 @@ void Widget::createSidebar() {
 
     // TODO: Delete this when it will finished
     Utils::showSidebars(this);
+}
+
+void Widget::loadData() {
+    // loadSettings();
+    contact_settings = new ContactSettings();
+    user_settings = new UserSettings();
+
+    // loadChatsHistory();
 }
 
 void Widget::keyPressEvent(QKeyEvent* key_event) {
