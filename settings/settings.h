@@ -9,7 +9,6 @@
 
 
 class Settings : public QWidget {
-    Q_OBJECT
 public:
     Settings();
     virtual ~Settings();
@@ -18,6 +17,18 @@ public:
 
 protected:
     std::shared_ptr<Logger> m_log;
+
+    enum class SettingsStates {
+        JSON_FILE_UPDATED,
+        JSON_FILE_NOT_UPDATED,
+
+        PARSE_ERROR,
+
+        CREATE_SUCCESSFUL,
+        CANT_CREATE_FILE,
+        CANT_OPEN_FILE,
+        CANT_READ_FILE,
+    };
 
 protected:
     [[nodiscard]] const std::filesystem::path getSettingsPath() const;
@@ -64,9 +75,11 @@ protected:
 
 
 private:
-    const std::string_view getFileName() const override { return m_SETTINGS_FILE; };
-    void setDefaults();
-    void checkFields();
+    [[nodiscard]] const std::string_view getFileName() const override { return m_SETTINGS_FILE; };
+    [[nodiscard]] QJsonObject getDefaultSettings();
+    [[nodiscard]] SettingsStates isFieldsUpdated();
+    void setDefaultSettings();
+    void bypassJson(const QJsonValue& value, const QString& path = "");
     void updateJSON();
 };
 
