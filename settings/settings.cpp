@@ -11,6 +11,9 @@
 #include "../utils/own_utils.h"
 
 
+static constexpr int VERSION = 1;
+static constexpr int DEFAULT_1GB_MEMORY_LIMIT = 1 * 1024 * 1024;
+
 Settings::Settings() : m_log(Logger::getInstance()) {
     std::filesystem::create_directory(getSettingsPath());
 }
@@ -57,37 +60,40 @@ UserSettings::~UserSettings() {
 
 }
 
-void UserSettings::setDefaults() {
-    m_log->info("UserSettings: ", getFilePath());
-
-    // QJsonArray json_array;
+QJsonObject UserSettings::getDefaultSettings() {
     QJsonObject head_object;
     QJsonObject collect_objects;
 
     QJsonObject window_object;
-    window_object.insert("width", 1600);
-    window_object.insert("height", 900);
+    window_object["width"] = 1600;
+    window_object["height"] = 900;
 
     QJsonObject sound_object;
-    sound_object.insert("InputVolume", 100);
-    sound_object.insert("OutputVolume", 100);
-    sound_object.insert("InputHeadphoneVolume", 100);
-    sound_object.insert("OutputHeadphoneVolume", 100);
+    sound_object["InputVolume"]             = 100;
+    sound_object["OutputVolume"]            = 100;
+    sound_object["InputHeadphoneVolume"]    = 100;
+    sound_object["OutputHeadphoneVolume"]   = 100;
 
-    collect_objects.insert("VersionJSON", 1);
-    collect_objects.insert("Resolution", window_object);
-    collect_objects.insert("Sound", sound_object);
+    collect_objects["VersionJSON"]  = VERSION;
+    collect_objects["Resolution"]   = window_object;
+    collect_objects["Sound"]        = sound_object;
     // TODO: User should choose this one
-    collect_objects.insert("ChatsHistory", "Path to current directory");
-    collect_objects.insert("Avatar", "Path to default avatar");
+    collect_objects["ChatsHistory"] = "Path to current directory";
+    collect_objects["Avatar"]       = "Path to default avatar";
     // TODO: Memory limit for all chats. Exceeding the limit starts to remove old messages
-    collect_objects.insert("ChatMemoryLimit", 5);
-    collect_objects.insert("Theme", "default");
-    collect_objects.insert("VideoQuality", "We Will See In The Future");
+    collect_objects["ChatMemoryLimit"]  = DEFAULT_1GB_MEMORY_LIMIT;
+    collect_objects["Theme"]            = "default";
+    collect_objects["VideoQuality"]     = "We Will See In The Future";
 
     head_object.insert("SelfSettings", collect_objects);
+    return head_object;
+}
 
-    QJsonDocument doc(head_object);
+UserSettings::SettingsStates UserSettings::setDefaultSettings() {
+    m_log->info("UserSettings: ", getFilePath());
+    QJsonObject defaults = getDefaultSettings();
+
+    QJsonDocument doc(defaults);
     QString json_string = doc.toJson(QJsonDocument::Indented);
 
     QFile file(getFilePath().c_str());
