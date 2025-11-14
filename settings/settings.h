@@ -3,6 +3,7 @@
 
 #include <QWidget>
 
+#include <optional>
 #include <string_view>
 
 #include "../utils/logger.h"
@@ -28,9 +29,12 @@ protected:
         CANT_CREATE_FILE,
         CANT_OPEN_FILE,
         CANT_READ_FILE,
+        FILE_IS_EMPTY
     };
 
 protected:
+    [[nodiscard]] std::optional<QString> readFileToString() const;
+    [[nodiscard]] SettingsStates writeJsonToFile(const QString& json, const QString& another_path = ""); // Maybe update to bool
     [[nodiscard]] const std::filesystem::path getSettingsPath() const;
     [[nodiscard]] const bool fileExist() const;
     [[nodiscard]] const std::filesystem::path getFilePath() const;
@@ -79,8 +83,10 @@ private:
     [[nodiscard]] QJsonObject getDefaultSettings();
     [[nodiscard]] SettingsStates isFieldsUpdated();
     void setDefaultSettings();
-    void bypassJson(const QJsonValue& value, const QString& path = "");
-    void updateJSON();
+    QMap<QString, QString> bypassJson(const QJsonValue& value, const QString& path = "");
+    void insertByPath(QJsonObject& obj, const QStringList& path, const QJsonValue& value);
+    void configureNewSettings(const QMap<QString, QString>& default_settings, const QMap<QString, QString>& old_settings);
+    void updateJson();
 };
 
 #endif  // SETTINGS_H

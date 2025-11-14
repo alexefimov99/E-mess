@@ -4,6 +4,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QMap>
 #include <QTextStream>
 
 #include <filesystem>
@@ -20,6 +21,33 @@ Settings::Settings() : m_log(Logger::getInstance()) {
 
 Settings::~Settings() {
 
+}
+
+std::optional<QString> Settings::readFileToString() const {
+    QFile file(getFilePath().c_str());
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        m_log->warning("Settings: Can't read JSON file. ", getFilePath().c_str());
+        return {};
+    }
+
+    const QString content = file.readAll();
+    file.close();
+
+    return content;
+}
+
+Settings::SettingsStates Settings::writeJsonToFile(const QString& json, const QString& another_path) {
+    QFile file(another_path.isEmpty() ? getFilePath().c_str() : another_path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        m_log->error("Settings: Cannot create file ", file.fileName().toUtf8().constData(), ". Check the rights");
+        return SettingsStates::CANT_CREATE_FILE;
+    }
+
+    QTextStream stream(&file);
+    stream << json;
+    file.close();
+
+    return SettingsStates::CREATE_SUCCESSFUL;
 }
 
 const std::filesystem::path Settings::getSettingsPath() const {
@@ -55,7 +83,7 @@ UserSettings::UserSettings() {
 
     switch (isFieldsUpdated()) {
     case SettingsStates::JSON_FILE_UPDATED:
-        updateJSON();
+        updateJson();
         break;
     case SettingsStates::JSON_FILE_NOT_UPDATED:
         // Nothing to do
@@ -65,6 +93,10 @@ UserSettings::UserSettings() {
         break;
     case SettingsStates::CANT_READ_FILE:
         // Probably I should write workaround
+        break;
+    case SettingsStates::FILE_IS_EMPTY:
+        m_log->info("File ", getFilePath().c_str(), " is empty. Recreate file");
+        setDefaultSettings();
         break;
     default:
         break;
@@ -106,114 +138,130 @@ QJsonObject UserSettings::getDefaultSettings() {
 
 void UserSettings::setDefaultSettings() {
     m_log->info("UserSettings: ", getFilePath());
-    QJsonObject defaults = getDefaultSettings();
+    const QJsonObject defaults = getDefaultSettings();
 
-    QJsonDocument doc(defaults);
-    QString json_string = doc.toJson(QJsonDocument::Indented);
-
-    QFile file(getFilePath().c_str());
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        m_log->error("Cannot create file ", file.fileName().toUtf8().constData(), ". Check the rights");
-        // TODO: Create messagebox with warning
-        return;
+    const QJsonDocument doc(defaults);
+    const QString json_string = doc.toJson(QJsonDocument::Indented);
+    if (writeJsonToFile(json_string) == SettingsStates::CANT_CREATE_FILE) {
+        // TODO: Create messagebox with warning or something else
     }
-    QTextStream stream(&file);
-    stream << json_string;
-    file.close();
 }
 
 UserSettings::SettingsStates UserSettings::isFieldsUpdated() {
-    QFile file(getFilePath().c_str());
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        m_log->warning("Can't read JSON file. ", getFilePath().c_str());
+    const std::optional<QString> json_value = readFileToString();
+    if (!json_value.has_value()) {
         return SettingsStates::CANT_READ_FILE;
+    } else if (json_value.value().isEmpty()) {
+        return SettingsStates::FILE_IS_EMPTY;
     }
-    QString json_value = file.readAll();
-    file.close();
 
     QJsonParseError err;
-    const QJsonDocument doc = QJsonDocument::fromJson(json_value.toUtf8(), &err);
+    const QJsonDocument doc = QJsonDocument::fromJson(json_value.value().toUtf8(), &err);
     if (err.error != QJsonParseError::ParseError::NoError) {
         m_log->warning("Settings: JSON parse error. ", err.errorString().toUtf8().constData());
         return SettingsStates::PARSE_ERROR;
     }
 
     QJsonValue version = doc.object().value("SelfSettings").toObject().value("VersionJSON");
-    if (version == VERSION) {
+    if (version == 2/*VERSION*/) {
         return SettingsStates::JSON_FILE_NOT_UPDATED;
     }
 
     return SettingsStates::JSON_FILE_UPDATED;
 }
 
-// TODO: Think how I can compare two files and do replacements
-void UserSettings::bypassJson(const QJsonValue& value, const QString& path) {
+QMap<QString, QString> UserSettings::bypassJson(const QJsonValue& value, const QString& path) {
+    QMap<QString, QString> paths_list;
     if (value.isObject()) {
         const QJsonObject obj = value.toObject();
         for (auto it = obj.begin(); it != obj.end(); ++it) {
             const QString p = path.isEmpty() ? it.key() : path + "." + it.key();
-            bypassJson(it.value(), p);
+            QMap<QString, QString> nested = bypassJson(it.value(), p);
+            paths_list.insert(nested);
         }
     } else if (value.isArray()) {
         const QJsonArray arr = value.toArray();
         for (int i = 0; i < arr.size(); ++i) {
-            bypassJson(arr.at(i), path + "[" + QString::number(i) + "]");
+            QMap<QString, QString> nested = bypassJson(arr.at(i), path + "[" + QString::number(i) + "]");
+            paths_list.insert(nested);
         }
     } else {
         if (value.isString()) {
-            m_log->info(path.toUtf8().constData(), " = ", value.toString().toUtf8().constData());
+            paths_list[path] = value.toString();
+            // m_log->info((path + " = " + paths_list[path]).toUtf8().constData());
         } else {
-            m_log->info(path.toUtf8().constData(), " = ", value.toInt());
+            paths_list[path] = QString::number(value.toInt());
+            // m_log->info((path + " = " + paths_list[path]).toUtf8().constData());
         }
     }
+    return paths_list;
 };
 
-void UserSettings::updateJSON() {
-    QFile old_file(getFilePath().c_str());
-    if (!old_file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        m_log->warning("Can't read JSON file. ", getFilePath().c_str());
+void UserSettings::updateJson() {
+    m_log->info("Update JSON method...");
+    const std::optional<QString> json_value = readFileToString();
+    if (!json_value.has_value()) {
         // Maybe user wants to recreate JSON with default settings? Messagebox
         return;
+    } else if (json_value.value().isEmpty()) {
+        // hmmmmmmmmmmmmmmmm
+        return;
     }
-    QString json_value = old_file.readAll();
-    old_file.close();
-    old_file.remove();
 
     QJsonParseError err;
-    const QJsonDocument doc = QJsonDocument::fromJson(json_value.toUtf8(), &err);
+    const QJsonDocument doc = QJsonDocument::fromJson(json_value.value().toUtf8(), &err);
     if (err.error != QJsonParseError::ParseError::NoError) {
         m_log->warning("Settings: Updating file. JSON parse error. ", err.errorString().toUtf8().constData());
         // Maybe user wants to recreate JSON with default settings? Messagebox
         return;
     }
 
-    const QJsonObject defaults = getDefaultSettings();
-    QJsonObject old_settings = doc.object();
-    // for (const QString& key : old_settings.keys()) {
-    //     bypassJson(old_settings);
-    //     if (!defaults.contains(key)) {
-    //         old_settings.remove(key);
-    //     }
-    // }
+    const QJsonObject default_settings = getDefaultSettings();
+    const QJsonObject old_settings = doc.object();
+    const auto paths_to_old_settings_values = bypassJson(old_settings);
+    const auto paths_to_default_settings_values = bypassJson(default_settings);
 
-    QJsonObject new_settings;
-    // for (const QString& key : defaults.keys()) {
-    //     // bypassJson(new_settings);
-    //     if (old_settings.contains(key) && old_settings.value(key).type() == defaults.value(key).type()) {
-    //         new_settings[key] = old_settings.value(key);
-    //     } else {
-    //         new_settings[key] = defaults.value(key);
-    //     }
-    // }
+    configureNewSettings(paths_to_default_settings_values, paths_to_old_settings_values);
+}
 
-
-    const QJsonDocument new_doc(new_settings);
-    QFile new_file(getFilePath().c_str());
-    if (!new_file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        m_log->warning("Can't create new JSON file. ", getFilePath().c_str());
-        // Maybe user wants to recreate JSON with default settings? Messagebox
+void UserSettings::insertByPath(QJsonObject& obj, const QStringList& path, const QJsonValue& value) {
+    if (path.isEmpty()) {
         return;
     }
-    new_file.write(new_doc.toJson(QJsonDocument::Indented));
-    new_file.close();
+
+    if (path.size() == 1) {
+        obj[path[0]] = value;
+    } else {
+        const QString current_key = path[0];
+        QJsonObject nested = obj[current_key].toObject();
+
+        insertByPath(nested, path.mid(1), value);
+        obj[current_key] = nested;
+    }
+}
+
+void UserSettings::configureNewSettings(const QMap<QString, QString>& default_settings, const QMap<QString, QString>& old_settings) {
+    QJsonObject new_settings;
+
+    for (const QString& key : default_settings.keys()) {
+        const QString value = old_settings.contains(key) ? old_settings.value(key)
+                                                         : default_settings.value(key);
+        QJsonValue json_value;
+        bool ok;
+        const int int_val = value.toInt(&ok);
+        if (ok) {
+            json_value = int_val;
+        } else {
+            json_value = value;
+        }
+
+        QStringList path = key.split('.');
+        insertByPath(new_settings, path, json_value);
+    }
+
+    const QJsonDocument doc(new_settings);
+    const QString json_value = doc.toJson(QJsonDocument::Indented);
+    if (writeJsonToFile(json_value) != SettingsStates::CANT_CREATE_FILE) {
+        // TODO: Create messagebox with warning or something else
+    }
 }
