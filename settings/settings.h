@@ -14,7 +14,8 @@ public:
     Settings();
     virtual ~Settings();
 
-    void setVolume() { }
+    // void setVolume() { }
+    virtual void settingsInit() = 0;
 
 protected:
     std::shared_ptr<Logger> m_log;
@@ -60,6 +61,8 @@ public:
     ContactSettings();
     ~ContactSettings();
 
+    void settingsInit() override;
+
 protected:
     inline static constexpr std::string_view m_SETTINGS_FILE = "contact_settings.json";
 
@@ -77,6 +80,8 @@ class UserSettings : public Settings {
 public:
     UserSettings();
     ~UserSettings();
+
+    void settingsInit() override;
 
 protected:
     inline static constexpr std::string_view m_SETTINGS_FILE = "user_settings.json";

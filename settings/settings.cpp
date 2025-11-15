@@ -107,6 +107,10 @@ void Settings::configureNewSettings(const QMap<QString, QString>& default_settin
 
 
 ContactSettings::ContactSettings() {
+
+}
+
+void ContactSettings::settingsInit() {
     if (!fileExist()) {
         setDefaultSettings();
     }
@@ -118,6 +122,10 @@ ContactSettings::~ContactSettings() {
 
 
 UserSettings::UserSettings() {
+
+}
+
+void UserSettings::settingsInit() {
     if (!fileExist()) {
         setDefaultSettings();
         return;

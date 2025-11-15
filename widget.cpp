@@ -79,6 +79,7 @@ void Widget::loadData() {
     // loadSettings();
     contact_settings = new ContactSettings();
     user_settings = new UserSettings();
+    user_settings->settingsInit();
 
     // loadChatsHistory();
 }
