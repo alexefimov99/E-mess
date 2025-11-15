@@ -213,7 +213,7 @@ UserSettings::SettingsStates UserSettings::isFieldsUpdated() {
     }
 
     QJsonValue version = doc.object().value("SelfSettings").toObject().value("VersionJSON");
-    if (version == 2/*VERSION*/) {
+    if (version == VERSION) {
         return SettingsStates::JSON_FILE_NOT_UPDATED;
     }
 
