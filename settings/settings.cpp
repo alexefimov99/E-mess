@@ -51,7 +51,7 @@ Settings::SettingsStates Settings::writeJsonToFile(const QString& json, const QS
 }
 
 const std::filesystem::path Settings::getSettingsPath() const {
-    return Utils::getPath("settings");
+    return m_prefer_path.empty() ? Utils::getPath("settings") : m_prefer_path;
 }
 
 const bool Settings::fileExist() const {
@@ -121,8 +121,8 @@ ContactSettings::~ContactSettings() {
 }
 
 
-UserSettings::UserSettings() {
-
+UserSettings::UserSettings(const std::filesystem::path& prefer_path) {
+    m_prefer_path = prefer_path;
 }
 
 void UserSettings::settingsInit() {

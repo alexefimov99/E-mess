@@ -19,6 +19,7 @@ public:
 
 protected:
     std::shared_ptr<Logger> m_log;
+    std::filesystem::path m_prefer_path;
 
     enum class SettingsStates {
         JSON_FILE_UPDATED,
