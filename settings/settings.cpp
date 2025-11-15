@@ -23,7 +23,7 @@ Settings::~Settings() {
 
 }
 
-std::optional<QString> Settings::readFileToString() const {
+const std::optional<QString> Settings::readFileToString() const {
     QFile file(getFilePath().c_str());
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         m_log->warning("Settings: Can't read JSON file. ", getFilePath().c_str());
@@ -181,6 +181,7 @@ QJsonObject UserSettings::getDefaultSettings() {
     collect_objects["ChatMemoryLimit"]  = DEFAULT_1GB_MEMORY_LIMIT;
     collect_objects["Theme"]            = "default";
     collect_objects["VideoQuality"]     = "We Will See In The Future";
+    // collect_objects["Testing"]     = "Testing";
 
     head_object.insert("SelfSettings", collect_objects);
     return head_object;

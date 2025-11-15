@@ -17,6 +17,9 @@ public:
     // void setVolume() { }
     virtual void settingsInit() = 0;
 
+    virtual const std::string_view getFileName() const = 0;
+    [[nodiscard]] const std::optional<QString> readFileToString() const;
+
 protected:
     std::shared_ptr<Logger> m_log;
     std::filesystem::path m_prefer_path;
@@ -39,7 +42,6 @@ protected:
     [[nodiscard]] const std::filesystem::path getFilePath() const;
     [[nodiscard]] const bool fileExist() const;
 
-    [[nodiscard]] std::optional<QString> readFileToString() const;
     [[nodiscard]] SettingsStates writeJsonToFile(const QString& json, const QString& another_path = ""); // Maybe update to bool
 
     void insertByPath(QJsonObject& obj, const QStringList& path, const QJsonValue& value);
@@ -47,8 +49,6 @@ protected:
 
 private:
     void getVolume() { }
-
-    virtual const std::string_view getFileName() const = 0;
 
     // TODO: Realize when video will be ready
     virtual void setVideoQuality() { }
@@ -79,17 +79,18 @@ private:
 class UserSettings : public Settings {
     Q_OBJECT
 public:
-    UserSettings();
+    UserSettings(const std::filesystem::path& prefer_path = "");
     ~UserSettings();
 
     void settingsInit() override;
+
+    [[nodiscard]] const std::string_view getFileName() const override { return m_SETTINGS_FILE; };
 
 protected:
     inline static constexpr std::string_view m_SETTINGS_FILE = "user_settings.json";
 
 
 private:
-    [[nodiscard]] const std::string_view getFileName() const override { return m_SETTINGS_FILE; };
 
     [[nodiscard]] QJsonObject getDefaultSettings();
     void setDefaultSettings();
