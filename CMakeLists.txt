@@ -42,18 +42,21 @@ if(BUILD_TESTS)
 endif()
 
 set(NON_EDITABLE_SOURSES
-        main.cpp
-        widget.ui
+    main.cpp
+)
+
+set(UI_SOURCES
+    widget.ui
 )
 
 set(PROJECT_SOURCES
-        widget.h                    widget.cpp
-        sidebar/sidebar.h           sidebar/sidebar.cpp
-        chats/chats_common.h        chats/chats_common.cpp
-        chats/user_message_box.h    chats/user_message_box.cpp
-        settings/settings.h         settings/settings.cpp
-        utils/own_utils.h           utils/own_utils.cpp
-        utils/logger.h              utils/logger.cpp
+    widget.h                    widget.cpp
+    sidebar/sidebar.h           sidebar/sidebar.cpp
+    chats/chats_common.h        chats/chats_common.cpp
+    chats/user_message_box.h    chats/user_message_box.cpp
+    settings/settings.h         settings/settings.cpp
+    utils/own_utils.h           utils/own_utils.cpp
+    utils/logger.h              utils/logger.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -76,6 +79,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 
 if(BUILD_TESTS)
     set(LIB_SOURCES
+        ${UI_SOURCES}
         ${PROJECT_SOURCES}
     )
 
@@ -86,7 +90,8 @@ if(BUILD_TESTS)
     )
 
     set(TEST_SOURCES
-        settings/tests/settings_tests.cpp
+        tests/main_tests.cpp
+        tests/settings/settings_tests.cpp
     )
 
     add_executable(${PROJECT_NAME}_tests
@@ -96,9 +101,7 @@ if(BUILD_TESTS)
     target_link_libraries(${PROJECT_NAME}_tests PRIVATE
         ${PROJECT_NAME}_lib
         GTest::gtest
-        GTest::gtest_main
         GTest::gmock
-        GTest::gmock_main
         Qt${QT_VERSION_MAJOR}::Widgets
     )
 
