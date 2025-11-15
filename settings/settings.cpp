@@ -63,10 +63,52 @@ const std::filesystem::path Settings::getFilePath() const{
     return getSettingsPath() / getFileName();
 }
 
+void Settings::insertByPath(QJsonObject& obj, const QStringList& path, const QJsonValue& value) {
+    if (path.isEmpty()) {
+        return;
+    }
+
+    if (path.size() == 1) {
+        obj[path[0]] = value;
+    } else {
+        const QString current_key = path[0];
+        QJsonObject nested = obj[current_key].toObject();
+
+        insertByPath(nested, path.mid(1), value);
+        obj[current_key] = nested;
+    }
+}
+
+void Settings::configureNewSettings(const QMap<QString, QString>& default_settings, const QMap<QString, QString>& old_settings) {
+    QJsonObject new_settings;
+
+    for (const QString& key : default_settings.keys()) {
+        const QString value = old_settings.contains(key) ? old_settings.value(key)
+                                                         : default_settings.value(key);
+        QJsonValue json_value;
+        bool ok;
+        const int int_val = value.toInt(&ok);
+        if (ok) {
+            json_value = int_val;
+        } else {
+            json_value = value;
+        }
+
+        QStringList path = key.split('.');
+        insertByPath(new_settings, path, json_value);
+    }
+
+    const QJsonDocument doc(new_settings);
+    const QString json_value = doc.toJson(QJsonDocument::Indented);
+    if (writeJsonToFile(json_value) != SettingsStates::CANT_CREATE_FILE) {
+        // TODO: Create messagebox with warning or something else
+    }
+}
+
 
 ContactSettings::ContactSettings() {
     if (!fileExist()) {
-        setDefaults();
+        setDefaultSettings();
     }
 }
 
@@ -222,46 +264,4 @@ void UserSettings::updateJson() {
     const auto paths_to_default_settings_values = bypassJson(default_settings);
 
     configureNewSettings(paths_to_default_settings_values, paths_to_old_settings_values);
-}
-
-void UserSettings::insertByPath(QJsonObject& obj, const QStringList& path, const QJsonValue& value) {
-    if (path.isEmpty()) {
-        return;
-    }
-
-    if (path.size() == 1) {
-        obj[path[0]] = value;
-    } else {
-        const QString current_key = path[0];
-        QJsonObject nested = obj[current_key].toObject();
-
-        insertByPath(nested, path.mid(1), value);
-        obj[current_key] = nested;
-    }
-}
-
-void UserSettings::configureNewSettings(const QMap<QString, QString>& default_settings, const QMap<QString, QString>& old_settings) {
-    QJsonObject new_settings;
-
-    for (const QString& key : default_settings.keys()) {
-        const QString value = old_settings.contains(key) ? old_settings.value(key)
-                                                         : default_settings.value(key);
-        QJsonValue json_value;
-        bool ok;
-        const int int_val = value.toInt(&ok);
-        if (ok) {
-            json_value = int_val;
-        } else {
-            json_value = value;
-        }
-
-        QStringList path = key.split('.');
-        insertByPath(new_settings, path, json_value);
-    }
-
-    const QJsonDocument doc(new_settings);
-    const QString json_value = doc.toJson(QJsonDocument::Indented);
-    if (writeJsonToFile(json_value) != SettingsStates::CANT_CREATE_FILE) {
-        // TODO: Create messagebox with warning or something else
-    }
 }

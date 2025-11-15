@@ -33,11 +33,15 @@ protected:
     };
 
 protected:
+    [[nodiscard]] const std::filesystem::path getSettingsPath() const;
+    [[nodiscard]] const std::filesystem::path getFilePath() const;
+    [[nodiscard]] const bool fileExist() const;
+
     [[nodiscard]] std::optional<QString> readFileToString() const;
     [[nodiscard]] SettingsStates writeJsonToFile(const QString& json, const QString& another_path = ""); // Maybe update to bool
-    [[nodiscard]] const std::filesystem::path getSettingsPath() const;
-    [[nodiscard]] const bool fileExist() const;
-    [[nodiscard]] const std::filesystem::path getFilePath() const;
+
+    void insertByPath(QJsonObject& obj, const QStringList& path, const QJsonValue& value);
+    void configureNewSettings(const QMap<QString, QString>& default_settings, const QMap<QString, QString>& old_settings);
 
 private:
     void getVolume() { }
@@ -63,8 +67,8 @@ private:
     bool global_settings = true;
 
 private:
-    void setDefaults() { m_log->info("ContactSettings: ", getFilePath()); };
     const std::string_view getFileName() const override { return m_SETTINGS_FILE; };
+    void setDefaultSettings() { m_log->info("ContactSettings: ", getFilePath()); };
 };
 
 /////////////////////////////////////////////
@@ -80,13 +84,13 @@ protected:
 
 private:
     [[nodiscard]] const std::string_view getFileName() const override { return m_SETTINGS_FILE; };
+
     [[nodiscard]] QJsonObject getDefaultSettings();
-    [[nodiscard]] SettingsStates isFieldsUpdated();
     void setDefaultSettings();
-    QMap<QString, QString> bypassJson(const QJsonValue& value, const QString& path = "");
-    void insertByPath(QJsonObject& obj, const QStringList& path, const QJsonValue& value);
-    void configureNewSettings(const QMap<QString, QString>& default_settings, const QMap<QString, QString>& old_settings);
+
+    [[nodiscard]] SettingsStates isFieldsUpdated();
     void updateJson();
+    QMap<QString, QString> bypassJson(const QJsonValue& value, const QString& path = "");
 };
 
 #endif  // SETTINGS_H
