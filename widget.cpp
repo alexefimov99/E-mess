@@ -81,11 +81,15 @@ void Widget::loadData() {
     user_settings = new UserSettings();
     user_settings->settingsInit();
 
+    // auto us = dynamic_cast<UserSettings*>(user_settings);
+    // QSize window_size = us->getWindowSize();
+
+
     // loadChatsHistory();
 }
 
 void Widget::keyPressEvent(QKeyEvent* key_event) {
-    int symbol_code = key_event->key();
+    const int symbol_code = key_event->key();
     if (key_event->modifiers() == Qt::ControlModifier) {
         if (symbol_code == Qt::Key_Q) {
             Utils::exitFromApp();
@@ -93,8 +97,11 @@ void Widget::keyPressEvent(QKeyEvent* key_event) {
             Utils::closeWindow();
         }
     }
+}
 
-    if (key_event->modifiers() == Qt::AltModifier) {
+void Widget::keyReleaseEvent(QKeyEvent* key_event) {
+    const int symbol_code = key_event->key();
+    if (symbol_code == Qt::Key_Alt) {
         if (m_contact_list_sidebar->isVisible()) {
             Utils::hideSidebars(this);
         } else {

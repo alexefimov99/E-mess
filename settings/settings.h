@@ -1,6 +1,7 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
+#include <QJsonObject>
 #include <QWidget>
 
 #include <optional>
@@ -86,6 +87,8 @@ public:
 
     [[nodiscard]] const std::string_view getFileName() const override { return m_SETTINGS_FILE; };
 
+    [[nodiscard]] const QSize getWindowSize() const;
+
 protected:
     inline static constexpr std::string_view m_SETTINGS_FILE = "user_settings.json";
 
@@ -98,6 +101,8 @@ private:
     [[nodiscard]] SettingsStates isFieldsUpdated();
     void updateJson();
     QMap<QString, QString> bypassJson(const QJsonValue& value, const QString& path = "");
+
+    [[nodiscard]] const std::optional<QJsonValue> findNeededJsonField(const QString& key, QJsonObject obj = QJsonObject()) const;
 };
 
 #endif  // SETTINGS_H

@@ -55,6 +55,7 @@ private:
     // void updateConnectionStatus();
 
     void keyPressEvent(QKeyEvent* key_event) override;
+    void keyReleaseEvent(QKeyEvent* key_event) override;
 
 private slots:
     // void onMessageReceived(const QByteArray &data);
