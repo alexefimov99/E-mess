@@ -98,6 +98,10 @@ if(BUILD_TESTS)
         ${TEST_SOURCES}
     )
 
+    target_compile_definitions(${PROJECT_NAME}_tests PRIVATE
+        TESTS_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests"
+    )
+
     target_link_libraries(${PROJECT_NAME}_tests PRIVATE
         ${PROJECT_NAME}_lib
         GTest::gtest
