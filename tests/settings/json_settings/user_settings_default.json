@@ -1,0 +1,20 @@
+{
+    "SelfSettings": {
+        "Avatar": "Path to default avatar",
+        "ChatMemoryLimit": 1048576,
+        "ChatsHistory": "Path to current directory",
+        "Resolution": {
+            "height": 900,
+            "width": 1600
+        },
+        "Sound": {
+            "InputHeadphoneVolume": 100,
+            "InputVolume": 100,
+            "OutputHeadphoneVolume": 100,
+            "OutputVolume": 100
+        },
+        "Theme": "default",
+        "VersionJSON": 1,
+        "VideoQuality": "We Will See In The Future"
+    }
+}
