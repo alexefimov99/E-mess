@@ -19,7 +19,20 @@ void Sidebar::initSidebar() {
     m_self_dialog->setAttribute(Qt::WA_TransparentForMouseEvents);
     m_self_dialog->setFlat(true);
 
-    m_self_dialog->setIcon(QIcon("/home/aleksandr/Dev/0_Projects/Qt/E-mess/icons/self_chat.png"));
+    switch (m_sidebar_type) {
+    case SidebarType::CONTACTS:
+        m_self_dialog->setIcon(QIcon("/home/aleksandr/Dev/0_Projects/Qt/E-mess/icons/contact_list.png"));
+        break;
+    case SidebarType::CONTACTS_SETTINGS:
+        m_self_dialog->setIcon(QIcon("/home/aleksandr/Dev/0_Projects/Qt/E-mess/icons/contact_settings.png"));
+        break;
+    case SidebarType::USER_SETTINGS:
+        m_self_dialog->setIcon(QIcon("/home/aleksandr/Dev/0_Projects/Qt/E-mess/icons/user_settings.png"));
+        break;
+    default:
+        break;
+    }
+
     m_self_dialog->setIconSize(QSize(m_SIZE, m_SIZE));
     m_self_dialog->setFixedSize(m_SIZE, m_SIZE);
 }

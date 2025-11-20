@@ -157,6 +157,17 @@ UserSettings::~UserSettings() {
 
 }
 
+const QSize UserSettings::getWindowSize() const {
+    const std::optional<QJsonValue> val = findNeededJsonField("Resolution");
+    if (!val.has_value() || !val->isObject()) {
+        m_log->info("Settings: Can't take resolution values");
+        return QSize(1600, 900);
+    }
+
+    const QJsonObject obj = val->toObject();
+    return QSize(obj["width"].toInt(), obj["height"].toInt());
+}
+
 QJsonObject UserSettings::getDefaultSettings() {
     QJsonObject head_object;
     QJsonObject collect_objects;
@@ -273,4 +284,39 @@ void UserSettings::updateJson() {
     const auto paths_to_default_settings_values = bypassJson(default_settings);
 
     configureNewSettings(paths_to_default_settings_values, paths_to_old_settings_values);
+}
+
+const std::optional<QJsonValue> UserSettings::findNeededJsonField(const QString& key, QJsonObject obj) const {
+    if (obj.empty()) {
+        const QString content = readFileToString().value();
+        const QJsonDocument doc = QJsonDocument::fromJson(content.toUtf8());
+        obj = doc.object();
+    }
+
+    for (auto it = obj.begin(); it != obj.end(); ++it) {
+        if (it.key() == key) {
+            return it.value();
+        }
+
+        if (it->isObject()) {
+            const auto result = findNeededJsonField(key, it->toObject());
+            if (!result->isNull()) {
+                return result;
+            }
+        }
+
+        if (it->isArray()) {
+            const auto arr = it->toArray();
+            for (const auto& el : arr) {
+                if (el.isObject()) {
+                    const auto result = findNeededJsonField(key, it->toObject());
+                    if (!result->isNull()) {
+                        return result;
+                    }
+                }
+            }
+        }
+    }
+
+    return {};
 }
