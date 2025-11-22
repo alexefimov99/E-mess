@@ -3,7 +3,6 @@
 #include <QVBoxLayout>
 #include <QMouseEvent>
 
-
 Sidebar::Sidebar(QWidget* parent, const SidebarType sidebar_type)
     : QWidget(parent)
     , m_log(Logger::getInstance())
