@@ -1,6 +1,7 @@
 #include "widget.h"
 #include "./ui_widget.h"
 
+#include "notifications/notification_manager.h"
 #include "settings/settings.h"
 #include "utils/own_utils.h"
 
@@ -25,6 +26,8 @@ Widget::Widget(QWidget *parent)
 
     m_main_layout->addWidget(m_common_elements);
     setLayout(m_main_layout);
+
+    notifier = new NotificationManager(this);
 }
 
 Widget::~Widget() {
@@ -70,9 +73,6 @@ void Widget::initSidebars() {
     sidebars_layout->addStretch(0);
     sidebars_layout->addWidget(m_user_settings_sidebar, 0, Qt::AlignRight);
     m_main_layout->addLayout(sidebars_layout, 0, 0);
-
-    // TODO: Delete this when it will finished
-    Utils::showSidebars(this);
 }
 
 void Widget::loadData() {
@@ -83,7 +83,6 @@ void Widget::loadData() {
 
     // auto us = dynamic_cast<UserSettings*>(user_settings);
     // QSize window_size = us->getWindowSize();
-
 
     // loadChatsHistory();
 }
