@@ -50,13 +50,14 @@ set(UI_SOURCES
 )
 
 set(PROJECT_SOURCES
-    widget.h                    widget.cpp
-    sidebar/sidebar.h           sidebar/sidebar.cpp
-    chats/chats_common.h        chats/chats_common.cpp
-    chats/user_message_box.h    chats/user_message_box.cpp
-    settings/settings.h         settings/settings.cpp
-    utils/own_utils.h           utils/own_utils.cpp
-    utils/logger.h              utils/logger.cpp
+    widget.h                                widget.cpp
+    sidebar/sidebar.h                       sidebar/sidebar.cpp
+    chats/chats_common.h                    chats/chats_common.cpp
+    chats/user_message_box.h                chats/user_message_box.cpp
+    notifications/notification_manager.h    notifications/notification_manager.cpp
+    settings/settings.h                     settings/settings.cpp
+    utils/own_utils.h                       utils/own_utils.cpp
+    utils/logger.h                          utils/logger.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
