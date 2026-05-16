@@ -59,7 +59,7 @@ void Sidebar::mousePressEvent(QMouseEvent* event) {
 
 void Sidebar::detailedPositionLog(QMouseEvent* event) const {
     m_log->info("event pos = ",  event->pos().x(), ", ", event->pos().y());
-    m_log->info("global pos = ", event->globalPos().x(), ", ", event->globalPos().y());
+    m_log->info("global pos = ", event->globalPosition().x(), ", ", event->globalPosition().y());
 
     m_log->info("geometry = ", geometry().x(), ", ", geometry().y(), ", ",
                                geometry().x() + geometry().width(), ", ",

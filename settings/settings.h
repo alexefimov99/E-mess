@@ -2,7 +2,7 @@
 #define SETTINGS_H
 
 #include <QJsonObject>
-#include <QWidget>
+// #include <QWidget>
 
 #include <optional>
 #include <string_view>
@@ -10,7 +10,7 @@
 #include "../utils/logger.h"
 
 
-class Settings : public QWidget {
+class Settings {
 public:
     Settings();
     virtual ~Settings();
@@ -20,10 +20,13 @@ public:
 
     virtual const std::string_view getFileName() const = 0;
     [[nodiscard]] const std::optional<QString> readFileToString() const;
+    [[nodiscard]] const QByteArray jsonToByteArray() const;
 
 protected:
     std::shared_ptr<Logger> m_log;
     std::filesystem::path m_prefer_path;
+
+    QJsonObject m_actual_json;
 
     enum class SettingsStates {
         JSON_FILE_UPDATED,
@@ -48,6 +51,10 @@ protected:
     void insertByPath(QJsonObject& obj, const QStringList& path, const QJsonValue& value);
     void configureNewSettings(const QMap<QString, QString>& default_settings, const QMap<QString, QString>& old_settings);
 
+    virtual bool load();
+    virtual bool save() { return false; }
+    // virtual bool isFileValid();
+
 private:
     void getVolume() { }
 
@@ -58,7 +65,6 @@ private:
 
 /////////////////////////////////////////////
 class ContactSettings : public Settings {
-    Q_OBJECT
 public:
     ContactSettings();
     ~ContactSettings();
@@ -78,7 +84,6 @@ private:
 
 /////////////////////////////////////////////
 class UserSettings : public Settings {
-    Q_OBJECT
 public:
     UserSettings(const std::filesystem::path& prefer_path = "");
     ~UserSettings();

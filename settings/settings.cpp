@@ -13,7 +13,7 @@
 
 
 static constexpr int VERSION = 1;
-static constexpr int DEFAULT_1GB_MEMORY_LIMIT = 1 * 1024 * 1024;
+static constexpr int DEFAULT_1GB_MEMORY_LIMIT = 1 * 1024 * 1024/* * 1024*/;
 
 Settings::Settings() : m_log(Logger::getInstance()) {
     std::filesystem::create_directory(getSettingsPath());
@@ -34,6 +34,11 @@ const std::optional<QString> Settings::readFileToString() const {
     file.close();
 
     return content;
+}
+
+const QByteArray Settings::jsonToByteArray() const {
+    const QJsonDocument doc(m_actual_json);
+    return doc.toJson();
 }
 
 Settings::SettingsStates Settings::writeJsonToFile(const QString& json, const QString& another_path) {
@@ -83,8 +88,11 @@ void Settings::configureNewSettings(const QMap<QString, QString>& default_settin
     QJsonObject new_settings;
 
     for (const QString& key : default_settings.keys()) {
-        const QString value = old_settings.contains(key) ? old_settings.value(key)
-                                                         : default_settings.value(key);
+        QString value = old_settings.contains(key) ? old_settings.value(key)
+                                                   : default_settings.value(key);
+        if (key == "VersionJSON" && default_settings.value(key) > old_settings.value(key)) {
+            value = default_settings.value(key);
+        }
         QJsonValue json_value;
         bool ok;
         const int int_val = value.toInt(&ok);
@@ -103,6 +111,22 @@ void Settings::configureNewSettings(const QMap<QString, QString>& default_settin
     if (writeJsonToFile(json_value) != SettingsStates::CANT_CREATE_FILE) {
         // TODO: Create messagebox with warning or something else
     }
+}
+
+bool Settings::load() {
+    const std::optional<QString> content = readFileToString();
+    if (!content.has_value() || content.value().isEmpty()) {
+        return false;
+    }
+
+    QJsonParseError err;
+    const QJsonDocument doc = QJsonDocument::fromJson(content.value().toUtf8(), &err);
+    if (err.error != QJsonParseError::NoError) {
+        return false;
+    }
+
+    m_actual_json = doc.object();
+    return true;
 }
 
 
@@ -128,6 +152,9 @@ UserSettings::UserSettings(const std::filesystem::path& prefer_path) {
 void UserSettings::settingsInit() {
     if (!fileExist()) {
         setDefaultSettings();
+        return;
+    } else if (!load()) {
+        // load backup file { if don't load just load default }
         return;
     }
 
@@ -165,42 +192,70 @@ const QSize UserSettings::getWindowSize() const {
     }
 
     const QJsonObject obj = val->toObject();
-    return QSize(obj["width"].toInt(), obj["height"].toInt());
+    return QSize(obj["Width"].toInt(), obj["Height"].toInt());
 }
 
 QJsonObject UserSettings::getDefaultSettings() {
-    QJsonObject head_object;
     QJsonObject collect_objects;
 
+    // WINDOW
     QJsonObject window_object;
-    window_object["width"] = 1600;
-    window_object["height"] = 900;
+    window_object["StartMaximized"] = false;
+    window_object["RememberWindowPosition"] = false;
+    QJsonObject window_pos;
+    window_pos["X"] = 0;
+    window_pos["Y"] = 0;
+    window_object["WindowPosition"] = window_pos;
 
+    QJsonObject resolution;
+    resolution["Width"] = 1600;
+    resolution["Height"] = 900;
+    window_object["Resolution"] = resolution;
+
+    // SOUND
     QJsonObject sound_object;
-    sound_object["InputVolume"]             = 100;
-    sound_object["OutputVolume"]            = 100;
-    sound_object["InputHeadphoneVolume"]    = 100;
-    sound_object["OutputHeadphoneVolume"]   = 100;
+    QJsonObject sound_devices;
+    sound_devices["InputDevice"] = "default";
+    sound_devices["OutputDevice"] = "default";
 
+    QJsonObject sound_volume;
+    sound_volume["InputVolume"]             = 100;
+    sound_volume["OutputVolume"]            = 100;
+    sound_volume["InputHeadphoneVolume"]    = 100;
+    sound_volume["OutputHeadphoneVolume"]   = 100;
+
+    sound_object["Devices"] = sound_devices;
+    sound_object["Volume"] = sound_volume;
+
+    // VIDEO
+    // QJsonObject video;
+    // video["Camera"]              = "default";
+    // video["DefaultInputQuality"] = "720p";
+    // video["OutputQuality"]       = "720p";
+    // video["StreamQuality"]       = "720p";
+    // video["Bitrate"]             = 2500;
+
+    // COLLECT SETTINGS
     collect_objects["VersionJSON"]  = VERSION;
-    collect_objects["Resolution"]   = window_object;
+    collect_objects["Window"]       = window_object;
     collect_objects["Sound"]        = sound_object;
+    // collect_objects["Video"]        = video;
     // TODO: User should choose this one
     collect_objects["ChatsHistory"] = "Path to current directory";
     collect_objects["Avatar"]       = "Path to default avatar";
     // TODO: Memory limit for all chats. Exceeding the limit starts to remove old messages
     collect_objects["ChatMemoryLimit"]  = DEFAULT_1GB_MEMORY_LIMIT;
     collect_objects["Theme"]            = "default";
-    collect_objects["VideoQuality"]     = "We Will See In The Future";
+    collect_objects["Language"]         = "en"; //getSystemLanguage();
     // collect_objects["Testing"]     = "Testing";
 
-    head_object.insert("SelfSettings", collect_objects);
-    return head_object;
+    return collect_objects;
 }
 
 void UserSettings::setDefaultSettings() {
     m_log->info("UserSettings: ", getFilePath());
     const QJsonObject defaults = getDefaultSettings();
+    m_actual_json = defaults;
 
     const QJsonDocument doc(defaults);
     const QString json_string = doc.toJson(QJsonDocument::Indented);
@@ -210,21 +265,7 @@ void UserSettings::setDefaultSettings() {
 }
 
 UserSettings::SettingsStates UserSettings::isFieldsUpdated() {
-    const std::optional<QString> json_value = readFileToString();
-    if (!json_value.has_value()) {
-        return SettingsStates::CANT_READ_FILE;
-    } else if (json_value.value().isEmpty()) {
-        return SettingsStates::FILE_IS_EMPTY;
-    }
-
-    QJsonParseError err;
-    const QJsonDocument doc = QJsonDocument::fromJson(json_value.value().toUtf8(), &err);
-    if (err.error != QJsonParseError::ParseError::NoError) {
-        m_log->warning("Settings: JSON parse error. ", err.errorString().toUtf8().constData());
-        return SettingsStates::PARSE_ERROR;
-    }
-
-    QJsonValue version = doc.object().value("SelfSettings").toObject().value("VersionJSON");
+    QJsonValue version = m_actual_json["VersionJSON"];
     if (version == VERSION) {
         return SettingsStates::JSON_FILE_NOT_UPDATED;
     }
@@ -261,17 +302,8 @@ QMap<QString, QString> UserSettings::bypassJson(const QJsonValue& value, const Q
 
 void UserSettings::updateJson() {
     m_log->info("Update JSON method...");
-    const std::optional<QString> json_value = readFileToString();
-    if (!json_value.has_value()) {
-        // Maybe user wants to recreate JSON with default settings? Messagebox
-        return;
-    } else if (json_value.value().isEmpty()) {
-        // hmmmmmmmmmmmmmmmm
-        return;
-    }
-
     QJsonParseError err;
-    const QJsonDocument doc = QJsonDocument::fromJson(json_value.value().toUtf8(), &err);
+    const QJsonDocument doc = QJsonDocument::fromJson(jsonToByteArray(), &err);
     if (err.error != QJsonParseError::ParseError::NoError) {
         m_log->warning("Settings: Updating file. JSON parse error. ", err.errorString().toUtf8().constData());
         // Maybe user wants to recreate JSON with default settings? Messagebox
@@ -279,8 +311,7 @@ void UserSettings::updateJson() {
     }
 
     const QJsonObject default_settings = getDefaultSettings();
-    const QJsonObject old_settings = doc.object();
-    const auto paths_to_old_settings_values = bypassJson(old_settings);
+    const auto paths_to_old_settings_values = bypassJson(m_actual_json);
     const auto paths_to_default_settings_values = bypassJson(default_settings);
 
     configureNewSettings(paths_to_default_settings_values, paths_to_old_settings_values);
@@ -288,9 +319,11 @@ void UserSettings::updateJson() {
 
 const std::optional<QJsonValue> UserSettings::findNeededJsonField(const QString& key, QJsonObject obj) const {
     if (obj.empty()) {
-        const QString content = readFileToString().value();
-        const QJsonDocument doc = QJsonDocument::fromJson(content.toUtf8());
-        obj = doc.object();
+        if (m_actual_json.empty()) {
+            return { };
+        }
+
+        obj = m_actual_json;
     }
 
     for (auto it = obj.begin(); it != obj.end(); ++it) {
@@ -300,7 +333,7 @@ const std::optional<QJsonValue> UserSettings::findNeededJsonField(const QString&
 
         if (it->isObject()) {
             const auto result = findNeededJsonField(key, it->toObject());
-            if (!result->isNull()) {
+            if (result.has_value()) {
                 return result;
             }
         }
@@ -309,8 +342,8 @@ const std::optional<QJsonValue> UserSettings::findNeededJsonField(const QString&
             const auto arr = it->toArray();
             for (const auto& el : arr) {
                 if (el.isObject()) {
-                    const auto result = findNeededJsonField(key, it->toObject());
-                    if (!result->isNull()) {
+                    const auto result = findNeededJsonField(key, el.toObject());
+                    if (result.has_value()) {
                         return result;
                     }
                 }

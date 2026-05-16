@@ -19,10 +19,10 @@ namespace Utils {
 } // namespace Utils
 
 namespace TimeUtils {
-    std::string_view timestampToString(const auto& curr_timestamp, bool full_date = false);
+    std::string timestampToString(const auto& curr_timestamp, bool full_date = false);
 
     std::chrono::system_clock::time_point now();
-    std::string_view nowStr();
+    std::string nowStr();
 } // namespace TimeUtils
 
 #endif // OWN_UTILS_H

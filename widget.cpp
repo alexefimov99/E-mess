@@ -106,6 +106,8 @@ void Widget::keyReleaseEvent(QKeyEvent* key_event) {
         } else {
             Utils::showSidebars(this);
         }
+
+        return;
     }
 }
 
