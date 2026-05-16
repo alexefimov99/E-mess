@@ -12,6 +12,7 @@
 #include <QPropertyAnimation>
 
 class Settings;
+class NotificationManager;
 
 
 QT_BEGIN_NAMESPACE
@@ -47,6 +48,8 @@ private:
 
     Settings* contact_settings;
     Settings* user_settings;
+
+    NotificationManager* notifier;
 
 private:
     void createGeneralWidget();

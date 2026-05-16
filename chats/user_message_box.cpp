@@ -63,13 +63,14 @@ void UserMessageBox::keyPressEvent(QKeyEvent* key_event) {
         }
     }
 
-    if (key_event->modifiers() == Qt::AltModifier && m_root_widget) {
+    if (symbol_code == Qt::Key_Alt) {
         const bool sidebars_visible = m_root_widget->findChildren<Sidebar*>().takeFirst()->isVisible();
         if (sidebars_visible) {
-            Utils::hideSidebars(m_root_widget);
+            Utils::hideSidebars(this);
         } else {
-            Utils::showSidebars(m_root_widget);
+            Utils::showSidebars(this);
         }
+
         return;
     }
 

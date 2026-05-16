@@ -1,4 +1,4 @@
-#include "networkconnecion.h"
+#include "networkconnection.h"
 
 #include "../utils/logger.h"
 
