@@ -1,9 +1,9 @@
 #ifndef WIDGET_H
 #define WIDGET_H
 
-#include "chats/chats_common.h"
-#include "sidebar/sidebar.h"
-#include "utils/logger.h"
+#include "../chats/chats_common.h"
+#include "../sidebar/sidebar.h"
+#include "../../utils/logger.h"
 
 #include <QWidget>
 #include <QGridLayout>

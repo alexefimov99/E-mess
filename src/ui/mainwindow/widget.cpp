@@ -1,9 +1,9 @@
 #include "widget.h"
 #include "./ui_widget.h"
 
-#include "notifications/notification_manager.h"
-#include "settings/settings.h"
-#include "utils/own_utils.h"
+#include "../../core/notifications/notification_manager.h"
+#include "../../core/settings/settings.h"
+#include "../../utils/own_utils.h"
 
 #include <QMouseEvent>
 
@@ -77,11 +77,11 @@ void Widget::initSidebars() {
 
 void Widget::loadData() {
     // loadSettings();
-    contact_settings = new ContactSettings();
-    user_settings = new UserSettings();
-    user_settings->settingsInit();
+    // contact_settings = new ContactSettings();
+    user_settings = new MainSettings();
+    user_settings->init();
 
-    // auto us = dynamic_cast<UserSettings*>(user_settings);
+    // auto us = dynamic_cast<MainSettings*>(user_settings);
     // QSize window_size = us->getWindowSize();
 
     // loadChatsHistory();

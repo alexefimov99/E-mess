@@ -23,18 +23,33 @@ if(NOT Boost_FOUND)
 endif()
 
 set(PROJECT_SOURCES
-    main.cpp
-    widget.ui
-    widget.cpp    widget.h
+    src/main.cpp
+    src/ui/mainwindow/widget.ui
 
-    sidebar/sidebar.cpp                         sidebar/sidebar.h
-    chats/chats_common.cpp                      chats/chats_common.h
-    chats/user_message_box.cpp                  chats/user_message_box.h
-    #network/networkconnection.cpp               network/networkconnection.h
-    notifications/notification_manager.cpp      notifications/notification_manager.h
-    settings/settings.cpp                       settings/settings.h
-    utils/own_utils.cpp                         utils/own_utils.h
-    utils/logger.cpp                            utils/logger.h
+    src/ui/mainwindow/widget.cpp
+    src/ui/mainwindow/widget.h
+
+    src/ui/sidebar/sidebar.cpp
+    src/ui/sidebar/sidebar.h
+
+    src/ui/chats/chats_common.cpp
+    src/ui/chats/chats_common.h
+    src/ui/chats/user_message_box.cpp
+    src/ui/chats/user_message_box.h
+
+    # network/networkconnection.cpp
+    # network/networkconnection.h
+
+    src/core/notifications/notification_manager.cpp
+    src/core/notifications/notification_manager.h
+
+    src/core/settings/settings.cpp
+    src/core/settings/settings.h
+
+    src/utils/own_utils.cpp
+    src/utils/own_utils.h
+    src/utils/logger.cpp
+    src/utils/logger.h
 )
 
 qt_add_executable(${PROJECT_NAME}

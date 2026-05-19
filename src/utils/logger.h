@@ -57,16 +57,15 @@ public:
         writeMessage(log_message);
     }
 
-    static Logger* const getInstance(const Level level = Level::INFO);
+    static std::shared_ptr<Logger> getInstance(const Level level = Level::INFO);
 
 private:
-    static Logger* m_logger_instance;
     Level m_definite_level;
 
-    std::string_view log_dir;
+    std::string_view m_log_dir;
 
 private:
-    Logger(const Level level);
+    explicit Logger(const Level level);
 
     [[nodiscard]] bool fileExist();
     [[nodiscard]] std::filesystem::path getCurrPath();

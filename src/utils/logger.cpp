@@ -6,22 +6,17 @@
 #include <limits.h>
 
 
-Logger* Logger::m_logger_instance = nullptr;
-
 Logger::Logger(const Level level)
     : m_definite_level(level)
-    , log_dir("Logs") { }
+    , m_log_dir("Logs") { }
 
-Logger* const Logger::getInstance(const Level level) {
-    if (!m_logger_instance) {
-        m_logger_instance = new Logger(level);
-    }
-
-    return m_logger_instance;
+std::shared_ptr<Logger> Logger::getInstance(const Level level) {
+    static std::shared_ptr<Logger> instance{new Logger(level)};
+    return instance;
 }
 
 std::filesystem::path Logger::getLogPath() {
-    return Utils::getPath(log_dir);
+    return Utils::getPath(m_log_dir);
 }
 
 std::string Logger::getFilename(const std::string& new_name) {

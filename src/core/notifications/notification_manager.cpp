@@ -4,7 +4,7 @@
 #include <QHBoxLayout>
 #include <QRect>
 
-#include "../utils/logger.h"
+#include "../../utils/logger.h"
 
 
 NotificationManager::NotificationManager(QWidget* parent) : QWidget(parent), m_log(Logger::getInstance()) {

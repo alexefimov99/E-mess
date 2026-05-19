@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <QPushButton>
 
-#include "../utils/logger.h"
+#include "../../utils/logger.h"
 
 
 class Sidebar : public QWidget {

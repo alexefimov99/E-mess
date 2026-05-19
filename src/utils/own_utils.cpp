@@ -3,11 +3,11 @@
 #include <ctime>
 #include <QApplication>
 
-#include "../sidebar/sidebar.h"
+#include "../ui/sidebar/sidebar.h"
 #include "../utils/logger.h"
 
 
-static Logger* logger = Logger::getInstance();
+static std::shared_ptr<Logger> logger = Logger::getInstance();
 
 QList<Sidebar*> findAllSidebars(const QWidget* widget) {
     QList<Sidebar*> sidebars = widget->findChildren<Sidebar*>();
