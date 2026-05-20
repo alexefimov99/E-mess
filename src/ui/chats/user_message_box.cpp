@@ -98,9 +98,9 @@ void UserMessageBox::keyReleaseEvent(QKeyEvent* key_event) {
     if (symbol_code == Qt::Key_Alt) {
         const bool sidebars_visible = m_root_widget->findChildren<Sidebar*>().takeFirst()->isVisible();
         if (sidebars_visible) {
-            Utils::hideSidebars(this);
+            Utils::hideSidebars(m_root_widget);
         } else {
-            Utils::showSidebars(this);
+            Utils::showSidebars(m_root_widget);
         }
 
         return;
