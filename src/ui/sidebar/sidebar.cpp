@@ -19,15 +19,16 @@ void Sidebar::initSidebar() {
     m_self_dialog->setAttribute(Qt::WA_TransparentForMouseEvents);
     m_self_dialog->setFlat(true);
 
+    // TODO: Change the temporary paths to normal when icons could be changed
     switch (m_sidebar_type) {
     case SidebarType::CONTACTS:
-        m_self_dialog->setIcon(QIcon("/home/aleksandr/Dev/0_Projects/Qt/E-mess/icons/contact_list.png"));
+        m_self_dialog->setIcon(QIcon("/home/aleksandr/Dev/0_Projects/Qt/E-mess/resources/icons/contact_list.png"));
         break;
     case SidebarType::CONTACTS_SETTINGS:
-        m_self_dialog->setIcon(QIcon("/home/aleksandr/Dev/0_Projects/Qt/E-mess/icons/contact_settings.png"));
+        m_self_dialog->setIcon(QIcon("/home/aleksandr/Dev/0_Projects/Qt/E-mess/resources/icons/contact_settings.png"));
         break;
     case SidebarType::USER_SETTINGS:
-        m_self_dialog->setIcon(QIcon("/home/aleksandr/Dev/0_Projects/Qt/E-mess/icons/user_settings.png"));
+        m_self_dialog->setIcon(QIcon("/home/aleksandr/Dev/0_Projects/Qt/E-mess/resources/icons/user_settings.png"));
         break;
     default:
         break;
