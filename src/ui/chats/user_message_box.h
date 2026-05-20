@@ -13,6 +13,7 @@ public:
 
 private:
     void keyPressEvent(QKeyEvent* key_event) override;
+    void keyReleaseEvent(QKeyEvent* key_event) override;
 
     void lineBreaker(size_t pos, QString& text);
 

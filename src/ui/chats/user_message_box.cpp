@@ -63,17 +63,6 @@ void UserMessageBox::keyPressEvent(QKeyEvent* key_event) {
         }
     }
 
-    if (symbol_code == Qt::Key_Alt) {
-        const bool sidebars_visible = m_root_widget->findChildren<Sidebar*>().takeFirst()->isVisible();
-        if (sidebars_visible) {
-            Utils::hideSidebars(this);
-        } else {
-            Utils::showSidebars(this);
-        }
-
-        return;
-    }
-
     if (symbol_code == Qt::Key_Return && !toPlainText().isEmpty()) {
         emit(sendMessage(toPlainText()));
         text_cursor.select(QTextCursor::SelectionType::Document);
@@ -102,4 +91,18 @@ void UserMessageBox::keyPressEvent(QKeyEvent* key_event) {
     }
 
     setTextCursor(text_cursor);
+}
+
+void UserMessageBox::keyReleaseEvent(QKeyEvent* key_event) {
+    const int symbol_code = key_event->key();
+    if (symbol_code == Qt::Key_Alt) {
+        const bool sidebars_visible = m_root_widget->findChildren<Sidebar*>().takeFirst()->isVisible();
+        if (sidebars_visible) {
+            Utils::hideSidebars(this);
+        } else {
+            Utils::showSidebars(this);
+        }
+
+        return;
+    }
 }
