@@ -1,211 +1,149 @@
 #include "networkconnection.h"
 
-#include "../utils/logger.h"
+#include "../../utils/logger.h"
 
 
-NetworkClient::NetworkClient(QObject *parent)
-    : QObject(parent)
-    , m_work(std::make_shared<asio::executor_work_guard<asio::io_context::executor_type>>(asio::make_work_guard(m_io_context)))
-    , m_socket(std::make_shared<tcp::socket>(m_io_context))
-    , m_state(Disconnected)
-    , m_port(0)
-    , m_stopping(false)
-    , m_isWriting(false)
-{
-    m_receiveBuffer.resize(BUFFER_SIZE);
-    m_thread = std::thread([this]() { runAsioThread(); });
+namespace {
+constexpr size_t f_readBufferSize{1024};
+} // namespace
 
-    connect(&m_eventProcessTimer, &QTimer::timeout, this, &NetworkClient::processAsioEvents);
-    m_eventProcessTimer.start(EVENT_PROCESS_INTERVAL);
+void TcpConnection::Observer::onReceived([[maybe_unused]] int connectionId,
+                                         [[maybe_unused]] const char* data,
+                                         [[maybe_unused]] const size_t size) {}
 
-    connect(&m_reconnectTimer, &QTimer::timeout, this, &NetworkClient::attemptReconnect);
+void TcpConnection::Observer::onConnectionClosed(
+    [[maybe_unused]] int connectionId) {}
+
+TcpConnection::TcpConnection(boost::asio::ip::tcp::socket&& socket,
+                             Observer& observer, int id)
+    : m_socket{std::move(socket)}, m_readBuffer{}, m_writeBuffer{},
+    m_writeBufferMutex{}, m_observer{observer}, m_isReading{false},
+    m_isWritting{false}, m_id{id} {}
+
+std::shared_ptr<TcpConnection>
+TcpConnection::create(boost::asio::ip::tcp::socket&& socket, Observer& observer,
+                      int id) {
+    return std::shared_ptr<TcpConnection>(
+        new TcpConnection{std::move(socket), observer, id});
 }
 
-NetworkClient::~NetworkClient() {
-    disconnect();
-    stopAsioThread();
-}
-
-void NetworkClient::connectToServer(const QString &host, int port) {
-    if (m_state == Connecting || m_state == Connected) {
-        return;
-    }
-
-    m_host = host;
-    m_port = port;
-
-    setConnectionState(Connecting);
-    Log::info("[NETWORK] Connecting to ", host.toUtf8().constData(), ":", port);
-
-    asio::post(m_io_context, [this]() {
-        try {
-            tcp::resolver resolver(m_io_context);
-            auto endpoints = resolver.resolve(m_host.toStdString(), std::to_string(m_port));
-
-            asio::async_connect(*m_socket, endpoints,
-                                [this](const boost::system::error_code& error, const tcp::endpoint&) {
-                                    if (!error) {
-                                        boost::system::error_code ec;
-                                        m_socket->set_option(asio::socket_base::keep_alive(true), ec);
-
-                                        setConnectionState(Connected);
-                                        startReadOperation();
-                                    } else {
-                                        m_errorString = QString::fromStdString(error.message());
-                                        setConnectionState(Error);
-                                        m_reconnectTimer.start(RECONNECT_INTERVAL);
-                                    }
-                                });
-        } catch (const std::exception &e) {
-            m_errorString = QString("Connection error: %1").arg(e.what());
-            setConnectionState(Error);
-            m_reconnectTimer.start(RECONNECT_INTERVAL);
-        }
-    });
-}
-
-void NetworkClient::disconnect() {
-    m_reconnectTimer.stop();
-
-    if (m_state == Disconnected) {
-        return;
-    }
-
-    asio::post(m_io_context, [this]() {
-        boost::system::error_code ec;
-        if (m_socket->is_open()) {
-            m_socket->shutdown(asio::socket_base::shutdown_both, ec);
-            m_socket->close(ec);
-        }
-
-        m_socket = std::make_shared<tcp::socket>(m_io_context);
-        setConnectionState(Disconnected);
-    });
-}
-
-void NetworkClient::sendMessage(const QByteArray &data) {
-    if (m_state != Connected) {
-        return;
-    }
-
-    m_sendQueue.enqueue(data);
-
-    if (!m_isWriting) {
-        asio::post(m_io_context, [this]() {
-            if (!m_isWriting && !m_sendQueue.isEmpty()) {
-                m_isWriting = true;
-                QByteArray data = m_sendQueue.dequeue();
-
-                asio::async_write(*m_socket,
-                                  asio::buffer(data.constData(), data.size()),
-                                  [this](const boost::system::error_code& error, std::size_t bytes_transferred) {
-                                      handleWrite(error, bytes_transferred);
-                                  }
-                                  );
-            }
-        });
+void TcpConnection::startReading() {
+    if (!m_isReading) {
+        doRead();
     }
 }
 
-NetworkClient::ConnectionState NetworkClient::state() const {
-    return m_state;
-}
-
-QString NetworkClient::errorString() const {
-    return m_errorString;
-}
-
-void NetworkClient::processAsioEvents() {
-
-}
-
-void NetworkClient::attemptReconnect() {
-    if (m_state == Disconnected || m_state == Error) {
-        Log::warning("[NETWORK] Attempting to reconnect...");
-        connectToServer(m_host, m_port);
+void TcpConnection::send(const char* data, size_t size) {
+    std::lock_guard<std::mutex> guard{m_writeBufferMutex};
+    std::ostream bufferStream{&m_writeBuffer};
+    bufferStream.write(data, size);
+    if (!m_isWritting) {
+        doWrite();
     }
 }
 
-void NetworkClient::startReadOperation() {
-    if (!m_socket->is_open()) {
-        return;
-    }
-
-    m_socket->async_read_some(
-        asio::buffer(m_receiveBuffer),
-        [this](const boost::system::error_code& error, std::size_t bytes_transferred) {
-            handleRead(error, bytes_transferred);
-        }
-        );
-}
-
-void NetworkClient::handleRead(const boost::system::error_code &error, std::size_t bytesTransferred) {
-    if (!error) {
-        QByteArray data = QByteArray::fromRawData(m_receiveBuffer.data(), bytesTransferred);
-        emit messageReceived(data);
-        startReadOperation();
-    } else {
-        if (error != asio::error::operation_aborted) {
-            m_errorString = QString::fromStdString(error.message());
-            emit errorOccurred(m_errorString);
-
-            setConnectionState(Disconnected);
-            m_reconnectTimer.start(RECONNECT_INTERVAL);
-        }
-    }
-}
-
-void NetworkClient::handleWrite(const boost::system::error_code &error, std::size_t bytesTransferred) {
-    if (error) {
-        m_errorString = QString::fromStdString(error.message());
-        emit errorOccurred(m_errorString);
-
-        setConnectionState(Disconnected);
-        m_reconnectTimer.start(RECONNECT_INTERVAL);
-        return;
-    }
-
-    if (!m_sendQueue.isEmpty()) {
-        QByteArray data = m_sendQueue.dequeue();
-
-        asio::async_write(*m_socket,
-                          asio::buffer(data.constData(), data.size()),
-                          [this](const boost::system::error_code& error, std::size_t bytes_transferred) {
-                              handleWrite(error, bytes_transferred);
-                          });
-    } else {
-        m_isWriting = false;
-    }
-}
-
-void NetworkClient::setConnectionState(ConnectionState newState) {
-    if (m_state != newState) {
-        m_state = newState;
-        emit stateChanged(m_state);
-    }
-}
-
-void NetworkClient::runAsioThread() {
+void TcpConnection::close() {
     try {
-        m_io_context.run();
-    } catch (const std::exception &e) {
-        Log::error("[NETWORK] Exception in network thread: ", e.what());
+        m_socket.cancel();
+        m_socket.close();
+    } catch (const std::exception& e) {
+        m_log->error("TcpConnection::close() exception: ",
+                     static_cast<std::string>(e.what()));
+        return;
+    }
+    m_observer.onConnectionClosed(m_id);
+}
+
+void TcpConnection::doRead() {
+    m_isReading = true;
+    auto buffers{m_readBuffer.prepare(f_readBufferSize)};
+    auto self{shared_from_this()};
+    m_socket.async_read_some(buffers, [this, self](const auto& error,
+                                                   auto bytesTransferred) {
+        if (error) {
+            m_log->error("TcpConnection::doRead() error: ", error.message());
+            return close();
+        }
+        m_readBuffer.commit(bytesTransferred);
+        m_observer.onReceived(m_id,
+                              static_cast<const char*>(m_readBuffer.data().data()),
+                              bytesTransferred);
+        m_readBuffer.consume(bytesTransferred);
+        doRead();
+    });
+}
+
+void TcpConnection::doWrite() {
+    m_isWritting = true;
+    auto self{shared_from_this()};
+    m_socket.async_write_some(m_writeBuffer.data(), [this, self](
+                                                        const auto& error,
+                                                        auto bytesTransferred) {
+        if (error) {
+            m_log->error("TcpConnection::doWrite() error: ", error.message());
+            return close();
+        }
+        std::lock_guard<std::mutex> guard{m_writeBufferMutex};
+        m_writeBuffer.consume(bytesTransferred);
+        if (m_writeBuffer.size() == 0) {
+            m_isWritting = false;
+            return;
+        }
+        doWrite();
+    });
+}
+
+void TcpClient::Observer::onConnected() {}
+
+void TcpClient::Observer::onReceived([[maybe_unused]] const char* data,
+                                     [[maybe_unused]] size_t size) {}
+
+void TcpClient::Observer::onDisconnected() {}
+
+TcpClient::TcpClient(boost::asio::io_context& ioContext, Observer& observer)
+    : m_ioContext{ioContext}, m_connection{}, m_observer{observer} {}
+
+void TcpClient::connect(const boost::asio::ip::tcp::endpoint& endpoint) {
+    if (m_connection) {
+        return;
+    }
+    auto socket = std::make_shared<boost::asio::ip::tcp::socket>(m_ioContext);
+    socket->async_connect(endpoint, [this, socket](const auto& error) {
+        if (error) {
+            m_log->error("TcpClient::connect() error: ", error.message());
+            m_observer.onDisconnected();
+            return;
+        }
+        m_connection = TcpConnection::create(std::move(*socket), *this);
+        m_connection->startReading();
+        m_log->info("TCPClient connected");
+        m_observer.onConnected();
+    });
+}
+
+void TcpClient::send(const char* data, size_t size) {
+    if (!m_connection) {
+        m_log->error("TcpClient::send() error: no connection");
+        return;
+    }
+    m_connection->send(data, size);
+}
+
+void TcpClient::disconnect() {
+    if (m_connection) {
+        m_connection->close();
     }
 }
 
-void NetworkClient::stopAsioThread() {
-    m_stopping = true;
-    m_eventProcessTimer.stop();
-    m_reconnectTimer.stop();
+void TcpClient::onReceived([[maybe_unused]] int connectionId, const char* data,
+                           size_t size) {
+    m_observer.onReceived(data, size);
+}
 
-    m_work.reset();
-
-    if (m_thread.joinable()) {
-        m_thread.join();
-    }
-
-    boost::system::error_code ec;
-    if (m_socket->is_open()) {
-        m_socket->close(ec);
+void TcpClient::onConnectionClosed([[maybe_unused]] int connectionId) {
+    if (m_connection) {
+        m_connection.reset();
+        m_log->info("TCPClient disconnected");
+        m_observer.onDisconnected();
     }
 }

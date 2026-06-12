@@ -37,8 +37,8 @@ set(PROJECT_SOURCES
     src/ui/chats/user_message_box.cpp
     src/ui/chats/user_message_box.h
 
-    # network/networkconnection.cpp
-    # network/networkconnection.h
+    src/core/network/networkconnection.cpp
+    src/core/network/networkconnection.h
 
     src/core/notifications/notification_manager.cpp
     src/core/notifications/notification_manager.h

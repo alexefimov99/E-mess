@@ -1,82 +1,75 @@
 #ifndef NETWORKCLIENT_H
 #define NETWORKCLIENT_H
 
-#include <QObject>
-#include <QString>
-#include <QTimer>
-#include <QByteArray>
-#include <QQueue>
 #include <boost/asio.hpp>
-#include <boost/bind/bind.hpp>
-#include <boost/asio/executor_work_guard.hpp>
-#include <thread>
-#include <atomic>
-#include <memory>
+#include <boost/asio/ssl.hpp>
+#include <boost/asio/ip/tcp.hpp>
 
+#include <deque>
+
+
+class Logger;
 
 namespace asio = boost::asio;
-using boost::asio::ip::tcp;
+namespace ssl = boost::asio::ssl;
+using tcp = asio::ip::tcp;
 
-class NetworkClient : public QObject {
-    Q_OBJECT
 
+class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
 public:
-    enum ConnectionState {
-        Disconnected,
-        Connecting,
-        Connected,
-        Error
+    struct Observer {
+        virtual void onReceived(int connectionId, const char* data, size_t size);
+        virtual void onConnectionClosed(int connectionId);
     };
-    Q_ENUM(ConnectionState)
 
-    explicit NetworkClient(QObject *parent = nullptr);
-    ~NetworkClient();
+    static std::shared_ptr<TcpConnection> create(
+        boost::asio::ip::tcp::socket &&socket, Observer& observer, int id = 0);
 
-    void connectToServer(const QString &host, int port);
+    void startReading();
+    void send(const char* data, size_t size);
+    void close();
+
+private:
+    TcpConnection(boost::asio::ip::tcp::socket &&socket, Observer& observer,
+                  int id);
+    void doRead();
+    void doWrite();
+
+private:
+    std::shared_ptr<Logger> m_log;
+    boost::asio::ip::tcp::socket m_socket;
+    boost::asio::streambuf m_readBuffer;
+    boost::asio::streambuf m_writeBuffer;
+    std::mutex m_writeBufferMutex;
+    Observer& m_observer;
+    bool m_isReading;
+    bool m_isWritting;
+    int m_id;
+};
+
+class TcpClient : private TcpConnection::Observer {
+public:
+    struct Observer {
+        virtual void onConnected();
+        virtual void onReceived(const char* data, size_t size);
+        virtual void onDisconnected();
+    };
+
+    TcpClient(boost::asio::io_context& ioContext, Observer& observer);
+
+    void connect(const boost::asio::ip::tcp::endpoint& endpoint);
+    void send(const char* data, size_t size);
     void disconnect();
-    void sendMessage(const QByteArray &data);
-
-    ConnectionState state() const;
-    QString errorString() const;
-
-signals:
-    void stateChanged(ConnectionState state);
-    void messageReceived(const QByteArray &data);
-    void errorOccurred(const QString &errorMessage);
-
-private slots:
-    void processAsioEvents();
-    void attemptReconnect();
 
 private:
-    void startReadOperation();
-    void handleRead(const boost::system::error_code &error, std::size_t bytesTransferred);
-    void handleWrite(const boost::system::error_code &error, std::size_t bytesTransferred);
-    void setConnectionState(ConnectionState newState);
-    void runAsioThread();
-    void stopAsioThread();
+    void onReceived(int connectionId, const char* data, size_t size) override;
+    void onConnectionClosed(int connectionId) override;
 
 private:
-    asio::io_context m_io_context;
-    std::shared_ptr<asio::executor_work_guard<asio::io_context::executor_type>> m_work;
-    std::shared_ptr<tcp::socket> m_socket;
-    std::thread m_thread;
-    QTimer m_eventProcessTimer;
-    QTimer m_reconnectTimer;
-
-    ConnectionState m_state;
-    QString m_errorString;
-    QString m_host;
-    int m_port;
-    std::atomic<bool> m_stopping;
-
-    std::vector<char> m_receiveBuffer;
-    QQueue<QByteArray> m_sendQueue;
-    std::atomic<bool> m_isWriting;
-
-    static const int RECONNECT_INTERVAL = 5000; // 5 seconds
-    static const int EVENT_PROCESS_INTERVAL = 16; // ~60fps
-    static const int BUFFER_SIZE = 8192;
+    std::shared_ptr<Logger> m_log;
+    boost::asio::io_context& m_ioContext;
+    std::shared_ptr<TcpConnection> m_connection;
+    Observer& m_observer;
 };
 
 #endif // NETWORKCLIENT_H
