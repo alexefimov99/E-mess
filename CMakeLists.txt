@@ -22,6 +22,11 @@ if(NOT Boost_FOUND)
     message(FATAL_ERROR "Boost not found! Install: sudo apt install libboost-all-dev")
 endif()
 
+find_package(OpenSSL REQUIRED)
+if (NOT OpenSSL_FOUND)
+    message(FATAL_ERROR "OpenSSL not found! Install: sudo apt install openssl")
+endif()
+
 set(PROJECT_SOURCES
     src/main.cpp
     src/ui/mainwindow/widget.ui
@@ -65,6 +70,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Widgets
     Qt6::Network
     ${Boost_LIBRARIES}
+    OpenSSL::SSL
+    OpenSSL::Crypto
 )
 
 option(BUILD_TESTS "Build tests" ON)
