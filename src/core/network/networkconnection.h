@@ -5,8 +5,6 @@
 #include <boost/asio/ssl.hpp>
 #include <boost/asio/ip/tcp.hpp>
 
-#include <deque>
-
 
 class Logger;
 
